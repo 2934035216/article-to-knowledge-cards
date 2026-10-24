@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 - 大连市海外贸易数据采集与可视化系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f1b2d 0%, #1a3a6b 50%, #0f1b2d 100%);
+  }
+  .login-box {
+    width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+  .login-head {
+    background: linear-gradient(90deg, #1e3a5f, #2a5298);
+    padding: 26px 30px;
+    color: #fff;
+  }
+  .login-head h1 { font-size: 19px; letter-spacing: 2px; }
+  .login-head p { font-size: 12px; opacity: 0.85; margin-top: 6px; }
+  .tabs { display: flex; border-bottom: 1px solid #e8e8e8; }
+  .tab {
+    flex: 1; text-align: center; padding: 14px;
+    cursor: pointer; font-size: 15px; color: #666;
+    border-bottom: 2px solid transparent;
+  }
+  .tab.active { color: #1890ff; border-bottom-color: #1890ff; font-weight: bold; }
+  .form { padding: 26px 30px 30px; display: none; }
+  .form.active { display: block; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9;
+    border-radius: 6px; font-size: 14px; outline: none;
+  }
+  .field input:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.15); }
+  .btn {
+    width: 100%; padding: 11px; border: none; border-radius: 6px;
+    background: #1890ff; color: #fff; font-size: 15px; cursor: pointer;
+    letter-spacing: 4px;
+  }
+  .btn:hover { background: #40a9ff; }
+  .msg { text-align: center; font-size: 13px; margin-bottom: 12px; min-height: 18px; }
+  .msg.err { color: #f5222d; }
+  .msg.ok { color: #52c41a; }
+  .tip { margin-top: 14px; text-align: center; font-size: 12px; color: #999; }
+</style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="login-head">
+      <h1>大连市海外贸易数据采集与可视化系统</h1>
+      <p>Dalian Overseas Trade Data Collection & Visualization System</p>
+    </div>
+    <div class="tabs">
+      <div class="tab active" id="tab-login" onclick="switchTab('login')">用户登录</div>
+      <div class="tab" id="tab-reg" onclick="switchTab('reg')">用户注册</div>
+    </div>
+
+    <!-- 登录表单 -->
+    <div class="form active" id="form-login">
+      <div class="msg" id="login-msg"></div>
+      <div class="field">
+        <label>用户名</label>
+        <input id="login-username" placeholder="请输入用户名（管理员 admin）">
+      </div>
+      <div class="field">
+        <label>密码</label>
+        <input id="login-password" type="password" placeholder="请输入密码">
+      </div>
+      <button class="btn" onclick="doLogin()">登 录</button>
+      <div class="tip">默认管理员账号：admin / admin123</div>
+    </div>
+
+    <!-- 注册表单 -->
+    <div class="form" id="form-reg">
+      <div class="msg" id="reg-msg"></div>
+      <div class="field">
+        <label>用户名</label>
+        <input id="reg-username" placeholder="请输入用户名">
+      </div>
+      <div class="field">
+        <label>密码</label>
+        <input id="reg-password" type="password" placeholder="请输入密码">
+      </div>
+      <div class="field">
+        <label>昵称</label>
+        <input id="reg-nickname" placeholder="请输入昵称（选填）">
+      </div>
+      <div class="field">
+        <label>邮箱</label>
+        <input id="reg-email" placeholder="请输入邮箱（选填）">
+      </div>
+      <button class="btn" onclick="doRegister()">注 册</button>
+    </div>
+  </div>
+
+<script>
+  // 已登录直接进入系统
+  if (localStorage.getItem('token')) location.href = '/';
+
+  function switchTab(t) {
+    document.getElementById('tab-login').classList.toggle('active', t === 'login');
+    document.getElementById('tab-reg').classList.toggle('active', t === 'reg');
+    document.getElementById('form-login').classList.toggle('active', t === 'login');
+    document.getElementById('form-reg').classList.toggle('active', t === 'reg');
+  }
+
+  function showMsg(id, text, ok) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'msg ' + (ok ? 'ok' : 'err');
+  }
+
+  async function doLogin() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!username || !password) return showMsg('login-msg', '请输入用户名和密码', false);
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('nickname', data.nickname || data.username);
+        location.href = '/';
+      } else {
+        showMsg('login-msg', data.msg || '登录失败', false);
+      }
+    } catch (e) {
+      showMsg('login-msg', '服务器连接失败', false);
+    }
+  }
+
+  async function doRegister() {
+    const username = document.getElementById('reg-username').value.trim();
+    const password = document.getElementById('reg-password').value;
+    if (!username || !password) return showMsg('reg-msg', '请输入用户名和密码', false);
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username, password,
+          nickname: document.getElementById('reg-nickname').value.trim(),
+          email: document.getElementById('reg-email').value.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showMsg('reg-msg', '注册成功，请切换到登录', true);
+        setTimeout(() => {
+          switchTab('login');
+          document.getElementById('login-username').value = username;
+        }, 800);
+      } else {
+        showMsg('reg-msg', data.msg || '注册失败', false);
+      }
+    } catch (e) {
+      showMsg('reg-msg', '服务器连接失败', false);
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      document.getElementById('form-login').classList.contains('active')
+        ? doLogin() : doRegister();
+    }
+  });
+</script>
+</body>
+</html>

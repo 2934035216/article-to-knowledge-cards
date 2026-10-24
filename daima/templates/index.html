@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大连市海外贸易数据采集与可视化系统</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+  .app { display: flex; min-height: 100vh; }
+
+  /* ===== 左侧导航（五大模块） ===== */
+  .sidebar { width: 220px; background: #001529; color: #fff; position: fixed; top:0; bottom:0; left:0; overflow-y:auto; z-index:100; }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: #2a4a75; }
+  .logo { height: 58px; display:flex; align-items:center; justify-content:center; font-size:14.5px; font-weight:bold; background:#002140; letter-spacing:1px; border-bottom:1px solid #1f3a5f; padding: 0 8px; text-align:center; }
+  .mod-title { padding: 12px 18px 4px; font-size: 12px; color: #5b7ba6; letter-spacing: 1px; font-weight: bold; }
+  .nav-item { padding: 9px 18px 9px 30px; cursor: pointer; font-size: 13.5px; color: #c9d6e5; transition: all .2s; border-left: 3px solid transparent; }
+  .nav-item:hover { background:#1f3a5f; color:#fff; }
+  .nav-item.active { background:#1890ff; color:#fff; border-left-color:#69c0ff; }
+
+  /* ===== 主区域 ===== */
+  .main { margin-left: 220px; flex:1; display:flex; flex-direction:column; }
+  .header { height:56px; background:#fff; box-shadow:0 1px 4px rgba(0,21,41,.08); display:flex; align-items:center; padding:0 24px; position:sticky; top:0; z-index:50; }
+  .header h2 { font-size:17px; color:#001529; }
+  .header .crumb { margin-left:14px; color:#999; font-size:12.5px; }
+  .header .right { margin-left:auto; display:flex; align-items:center; gap:14px; font-size:13.5px; }
+  .header .role-badge { background:#e6f7ff; color:#1890ff; padding:2px 10px; border-radius:10px; font-size:12px; }
+  .header a.logout { color:#f5222d; cursor:pointer; text-decoration:none; }
+  .content { padding: 18px 22px; flex: 1; }
+
+  /* ===== KPI ===== */
+  .kpi-row { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-bottom:18px; }
+  .kpi-card { height:108px; border-radius:8px; background-size:cover; background-position:center; position:relative; overflow:hidden; }
+  .kpi-card .ov { position:absolute; inset:0; background:linear-gradient(135deg,rgba(0,0,0,.55),rgba(0,0,0,.25)); display:flex; flex-direction:column; justify-content:center; padding:12px 14px; color:#fff; }
+  .kpi-label { font-size:13px; opacity:.9; margin-bottom:6px; }
+  .kpi-value { font-size:22px; font-weight:bold; }
+  .kpi-unit { font-size:12px; opacity:.8; margin-left:3px; }
+
+  /* ===== 通用 ===== */
+  .panel { background:#fff; border-radius:8px; padding:18px 20px; box-shadow:0 1px 4px rgba(0,21,41,.08); margin-bottom:18px; }
+  .panel-title { font-size:15px; font-weight:bold; margin-bottom:14px; padding-left:10px; border-left:3px solid #1890ff; }
+  .chart { width:100%; height:380px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { background:#fafafa; padding:10px; text-align:left; font-weight:600; border-bottom:1px solid #e8e8e8; white-space:nowrap; }
+  tbody td { padding:9px 10px; border-bottom:1px solid #f0f0f0; color:#555; }
+  tbody tr:hover { background:#f5faff; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:12px; background:#e6f7ff; color:#1890ff; }
+  .tag.green { background:#f6ffed; color:#52c41a; }
+  .tag.orange { background:#fff7e6; color:#fa8c16; }
+  .tag.red { background:#fff1f0; color:#f5222d; }
+  .btn { padding:7px 16px; border:1px solid #d9d9d9; background:#fff; border-radius:5px; cursor:pointer; font-size:13px; }
+  .btn.primary { background:#1890ff; border-color:#1890ff; color:#fff; }
+  .btn.danger { background:#f5222d; border-color:#f5222d; color:#fff; }
+  .btn.sm { padding:3px 10px; font-size:12px; margin-right:6px; }
+  .btn:hover { opacity:.88; }
+  .pagination { display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:14px; font-size:13px; }
+  .pagination button:disabled { opacity:.4; cursor:not-allowed; }
+  .filter-bar { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:14px; }
+  .filter-bar .f { display:flex; flex-direction:column; gap:5px; }
+  .filter-bar label { font-size:12.5px; color:#666; }
+  .filter-bar input, .filter-bar select { padding:7px 10px; border:1px solid #d9d9d9; border-radius:5px; font-size:13px; min-width:150px; }
+  .view { display:none; }
+  .view.active { display:block; }
+  .form-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .form-grid .f label { display:block; font-size:13px; color:#555; margin-bottom:5px; }
+  .form-grid .f input, .form-grid .f select, textarea { width:100%; padding:8px 10px; border:1px solid #d9d9d9; border-radius:5px; font-size:13px; }
+  .notice-banner { background:#e6f7ff; border:1px solid #91d5ff; border-radius:8px; padding:12px 18px; margin-bottom:18px; font-size:13.5px; color:#0050b3; }
+  .notice-banner b { color:#1890ff; }
+  .stat-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+  .stat-card { background:#fff; border-radius:8px; padding:18px; box-shadow:0 1px 4px rgba(0,21,41,.08); text-align:center; }
+  .stat-card .v { font-size:26px; font-weight:bold; color:#1890ff; }
+  .stat-card .l { font-size:13px; color:#888; margin-top:6px; }
+  .info-table td:first-child { width:180px; font-weight:600; color:#333; background:#fafafa; }
+  .cat-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .modal-mask { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; align-items:center; justify-content:center; }
+  .modal-mask.show { display:flex; }
+  .modal { background:#fff; border-radius:10px; width:520px; max-height:80vh; overflow:auto; padding:22px 26px; }
+  .modal h3 { margin-bottom:16px; font-size:16px; }
+  .detail-row { display:flex; padding:8px 0; border-bottom:1px dashed #eee; font-size:13.5px; }
+  .detail-row .k { width:130px; color:#888; }
+  .detail-row .v { flex:1; font-weight:600; }
+  .empty { text-align:center; color:#bbb; padding:30px 0; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ 左侧导航：五大模块 ============ -->
+  <div class="sidebar">
+    <div class="logo">贸易数据采集与可视化系统</div>
+
+    <div class="nav-item" data-view="home">🏠 首页概览</div>
+
+    <div class="mod-title">用户管理模块</div>
+    <div class="nav-item" data-view="profile">👤 个人信息管理</div>
+    <div class="nav-item admin-only" data-view="users">👥 用户账号管理</div>
+
+    <div class="mod-title">贸易信息管理模块</div>
+    <div class="nav-item" data-view="records_mgmt">📋 贸易信息管理</div>
+    <div class="nav-item" data-view="categories">🗂️ 贸易分类管理</div>
+    <div class="nav-item" data-view="detail_mgmt">📝 贸易详情管理</div>
+    <div class="nav-item" data-view="quality">🧹 贸易信息维护</div>
+
+    <div class="mod-title">贸易查询模块</div>
+    <div class="nav-item" data-view="search">🔍 贸易搜索</div>
+    <div class="nav-item" data-view="filter_country">🌍 地区筛选</div>
+    <div class="nav-item" data-view="filter_type">📦 类型筛选</div>
+    <div class="nav-item" data-view="filter_pct">📈 占比筛选</div>
+    <div class="nav-item" data-view="detail_view">📄 详情查看</div>
+
+    <div class="mod-title">数据分析与可视化模块</div>
+    <div class="nav-item" data-view="ana_pct">🥧 贸易占比分析</div>
+    <div class="nav-item" data-view="ana_growth">📉 贸易增长分析</div>
+    <div class="nav-item" data-view="ana_amount">💰 贸易金额分析</div>
+    <div class="nav-item" data-view="ana_hot">🔥 贸易热度分析</div>
+    <div class="nav-item" data-view="ana_region">🌏 地区分布分析</div>
+    <div class="nav-item" data-view="ana_type">🔀 贸易类型分析</div>
+
+    <div class="mod-title">系统管理模块</div>
+    <div class="nav-item admin-only" data-view="notices">📢 公告管理</div>
+    <div class="nav-item" data-view="stats">📊 数据统计</div>
+    <div class="nav-item admin-only" data-view="maintenance">🛠️ 数据维护</div>
+    <div class="nav-item" data-view="sysinfo">ℹ️ 系统信息管理</div>
+  </div>
+
+  <!-- ============ 主内容 ============ -->
+  <div class="main">
+    <div class="header">
+      <h2 id="page-title">首页概览</h2>
+      <span class="crumb">大连市海外贸易数据</span>
+      <div class="right">
+        <span class="role-badge" id="role-badge">用户</span>
+        <span id="nick">--</span>
+        <a class="logout" onclick="doLogout()">退出登录</a>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- 首页 -->
+      <div class="view active" id="view-home">
+        <div class="notice-banner" id="notice-banner" style="display:none"></div>
+        <div class="kpi-row" id="kpi-row"></div>
+        <div class="grid2">
+          <div class="panel"><div class="panel-title">各贸易类型进出口总额</div><div id="home-trade" class="chart" style="height:320px"></div></div>
+          <div class="panel"><div class="panel-title">各地区进出口总额</div><div id="home-country" class="chart" style="height:320px"></div></div>
+        </div>
+      </div>
+
+      <!-- ===== 用户管理模块 ===== -->
+      <div class="view" id="view-profile">
+        <div class="panel">
+          <div class="panel-title">个人信息管理</div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;max-width:640px">
+            <div class="f"><label>用户名（不可修改）</label><input id="pf-username" disabled></div>
+            <div class="f"><label>角色</label><input id="pf-role" disabled></div>
+            <div class="f"><label>昵称</label><input id="pf-nickname"></div>
+            <div class="f"><label>邮箱</label><input id="pf-email"></div>
+            <div class="f"><label>新密码（留空则不修改）</label><input id="pf-password" type="password"></div>
+          </div>
+          <div style="margin-top:18px"><button class="btn primary" onclick="saveProfile()">保存修改</button></div>
+        </div>
+      </div>
+
+      <div class="view" id="view-users">
+        <div class="panel">
+          <div class="panel-title">用户账号管理</div>
+          <div class="filter-bar">
+            <button class="btn primary" onclick="showUserModal()">+ 新增用户</button>
+          </div>
+          <table>
+            <thead><tr><th>ID</th><th>用户名</th><th>昵称</th><th>邮箱</th><th>角色</th><th>创建时间</th><th>操作</th></tr></thead>
+            <tbody id="users-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== 贸易信息管理模块 ===== -->
+      <div class="view" id="view-records_mgmt">
+        <div class="panel">
+          <div class="panel-title">贸易信息管理（增删改查）</div>
+          <div class="filter-bar">
+            <button class="btn primary" onclick="showAddModal()">+ 新增记录</button>
+            <button class="btn" onclick="loadMgmt()">刷新</button>
+          </div>
+          <table>
+            <thead><tr><th>ID</th><th>统计日期</th><th>贸易类型</th><th>地区</th><th>总额(万元)</th><th>占比(%)</th><th>同比增长(%)</th><th>数据来源</th><th>操作</th></tr></thead>
+            <tbody id="mgmt-body"></tbody>
+          </table>
+          <div class="pagination">
+            <button class="btn sm" id="mgmt-prev" onclick="mgmtPage(-1)">上一页</button>
+            <span id="mgmt-info"></span>
+            <button class="btn sm" id="mgmt-next" onclick="mgmtPage(1)">下一页</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-categories">
+        <div class="panel">
+          <div class="panel-title">贸易分类管理</div>
+          <div class="cat-grid">
+            <div>
+              <h4 style="margin-bottom:10px">贸易类型</h4>
+              <table><thead><tr><th>分类名</th><th>记录数</th><th>操作</th></tr></thead><tbody id="cat-types"></tbody></table>
+            </div>
+            <div>
+              <h4 style="margin-bottom:10px">地区（国家类型）</h4>
+              <table><thead><tr><th>分类名</th><th>记录数</th><th>操作</th></tr></thead><tbody id="cat-countries"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-detail_mgmt">
+        <div class="panel">
+          <div class="panel-title">贸易详情管理（按 ID 编辑）</div>
+          <div class="filter-bar">
+            <div class="f"><label>记录 ID</label><input id="dm-id" type="number" placeholder="输入记录ID" style="min-width:120px"></div>
+            <button class="btn primary" onclick="loadDetailForEdit()">加载记录</button>
+          </div>
+          <div id="dm-form" style="display:none">
+            <div class="form-grid">
+              <div class="f"><label>统计日期</label><input id="dm-date" type="date"></div>
+              <div class="f"><label>贸易类型</label><input id="dm-type"></div>
+              <div class="f"><label>地区（国家类型）</label><input id="dm-country"></div>
+              <div class="f"><label>进出口总额(万元)</label><input id="dm-amount" type="number" step="0.01"></div>
+              <div class="f"><label>占比(%)</label><input id="dm-pct" type="number" step="0.01"></div>
+              <div class="f"><label>同比增长(%)</label><input id="dm-growth" type="number" step="0.01"></div>
+              <div class="f" style="grid-column:span 3"><label>数据来源</label><input id="dm-source"></div>
+            </div>
+            <div style="margin-top:18px">
+              <button class="btn primary" onclick="saveDetailEdit()">保存修改</button>
+              <button class="btn danger" onclick="deleteRecord($('#dm-id').val())">删除该记录</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-quality">
+        <div class="panel">
+          <div class="panel-title">贸易信息维护（数据质量检查）</div>
+          <div class="stat-cards" id="quality-cards"></div>
+          <button class="btn danger" onclick="cleanData()">一键清理无效数据（关键字段为空的记录）</button>
+          <span style="margin-left:10px;font-size:12.5px;color:#999" id="quality-msg"></span>
+        </div>
+      </div>
+
+      <!-- ===== 贸易查询模块 ===== -->
+      <div class="view" id="view-search">
+        <div class="panel">
+          <div class="panel-title">贸易搜索</div>
+          <div class="filter-bar">
+            <div class="f"><label>关键词（类型 / 地区 / 来源）</label><input id="q-keyword" placeholder="如：一般贸易 / 亚洲"></div>
+            <button class="btn primary" onclick="runSearch()">搜索</button>
+          </div>
+          <div id="q-table"></div>
+        </div>
+      </div>
+
+      <div class="view" id="view-filter_country">
+        <div class="panel">
+          <div class="panel-title">地区筛选</div>
+          <div class="filter-bar">
+            <div class="f"><label>地区</label><select id="f-country" onchange="runCountryFilter()"></select></div>
+          </div>
+          <div id="fc-table"></div>
+        </div>
+      </div>
+
+      <div class="view" id="view-filter_type">
+        <div class="panel">
+          <div class="panel-title">类型筛选</div>
+          <div class="filter-bar">
+            <div class="f"><label>贸易类型</label><select id="f-type" onchange="runTypeFilter()"></select></div>
+          </div>
+          <div id="ft-table"></div>
+        </div>
+      </div>
+
+      <div class="view" id="view-filter_pct">
+        <div class="panel">
+          <div class="panel-title">占比筛选</div>
+          <div class="filter-bar">
+            <div class="f"><label>占比最小值(%)</label><input id="f-minpct" type="number" placeholder="0"></div>
+            <div class="f"><label>占比最大值(%)</label><input id="f-maxpct" type="number" placeholder="100"></div>
+            <button class="btn primary" onclick="runPctFilter()">筛选</button>
+          </div>
+          <div id="fp-table"></div>
+        </div>
+      </div>
+
+      <div class="view" id="view-detail_view">
+        <div class="panel">
+          <div class="panel-title">详情查看（按 ID）</div>
+          <div class="filter-bar">
+            <div class="f"><label>记录 ID</label><input id="dv-id" type="number" placeholder="输入记录ID" style="min-width:120px"></div>
+            <button class="btn primary" onclick="showDetailPage()">查看详情</button>
+          </div>
+          <div id="dv-result"></div>
+        </div>
+      </div>
+
+      <!-- ===== 数据分析与可视化模块 ===== -->
+      <div class="view" id="view-ana_pct">
+        <div class="panel"><div class="panel-title">贸易占比分析（各类型平均占比）</div><div id="ch-pct" class="chart"></div></div>
+        <div class="panel"><div class="panel-title">各地区平均占比</div><div id="ch-pct2" class="chart"></div></div>
+      </div>
+      <div class="view" id="view-ana_growth">
+        <div class="panel"><div class="panel-title">贸易增长分析（同比增长区间分布）</div><div id="ch-growth" class="chart"></div></div>
+        <div class="panel"><div class="panel-title">月度平均占比趋势</div><div id="ch-growth2" class="chart"></div></div>
+      </div>
+      <div class="view" id="view-ana_amount">
+        <div class="panel"><div class="panel-title">贸易金额分析（各类型总额）</div><div id="ch-amount" class="chart"></div></div>
+        <div class="panel"><div class="panel-title">月度总额趋势</div><div id="ch-amount2" class="chart"></div></div>
+      </div>
+      <div class="view" id="view-ana_hot">
+        <div class="panel"><div class="panel-title">贸易热度分析（各类型记录频次）</div><div id="ch-hot1" class="chart"></div></div>
+        <div class="panel"><div class="panel-title">各地区记录频次</div><div id="ch-hot2" class="chart"></div></div>
+      </div>
+      <div class="view" id="view-ana_region">
+        <div class="panel"><div class="panel-title">地区分布分析（各地区总额）</div><div id="ch-region" class="chart"></div></div>
+        <div class="panel"><div class="panel-title">各地区占比结构</div><div id="ch-region2" class="chart"></div></div>
+      </div>
+      <div class="view" id="view-ana_type">
+        <div class="panel"><div class="panel-title">贸易类型分析（类型 × 地区 交叉总额）</div><div id="ch-cross" class="chart" style="height:420px"></div></div>
+      </div>
+
+      <!-- ===== 系统管理模块 ===== -->
+      <div class="view" id="view-notices">
+        <div class="panel">
+          <div class="panel-title">公告通知表</div>
+          <div class="filter-bar">
+            <button class="btn primary" onclick="showNoticeModal()">新增</button>
+            <button class="btn primary" onclick="document.getElementById('notice-file').click()">批量导入</button>
+            <button class="btn primary" onclick="downloadTemplate()">下载模板</button>
+            <input type="file" id="notice-file" accept=".csv" style="display:none" onchange="importNotices(this)">
+          </div>
+          <table>
+            <thead><tr>
+              <th style="width:50px">ID</th><th>标题</th><th>类别</th><th>摘要</th>
+              <th style="width:70px">点击率</th><th style="width:90px">发布人</th>
+              <th>发布时间</th><th style="width:170px">操作</th>
+            </tr></thead>
+            <tbody id="notices-body"></tbody>
+          </table>
+          <div class="pagination">
+            <button class="btn sm" id="nt-prev" onclick="noticePage(-1)">上一页</button>
+            <span id="nt-info"></span>
+            <button class="btn sm" id="nt-next" onclick="noticePage(1)">下一页</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-stats">
+        <div class="panel">
+          <div class="panel-title">数据统计</div>
+          <div class="stat-cards" id="stat-cards"></div>
+          <div id="stat-mysql"></div>
+        </div>
+      </div>
+
+      <div class="view" id="view-maintenance">
+        <div class="panel">
+          <div class="panel-title">数据维护</div>
+          <div class="filter-bar">
+            <button class="btn primary" onclick="importCsv()">从 CSV 重新导入 MySQL</button>
+            <button class="btn" onclick="reloadData()">重新加载数据缓存</button>
+          </div>
+          <div id="maint-msg" style="font-size:13.5px;color:#555"></div>
+        </div>
+      </div>
+
+      <div class="view" id="view-sysinfo">
+        <div class="panel">
+          <div class="panel-title">系统信息管理</div>
+          <table class="info-table"><tbody id="sysinfo-body"></tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="modal-mask" id="modal-mask">
+  <div class="modal">
+    <h3 id="modal-title">记录详情</h3>
+    <div id="modal-body"></div>
+    <div style="margin-top:18px;text-align:right"><button class="btn" onclick="closeModal()">关闭</button></div>
+  </div>
+</div>
+
+<script>
+const TOKEN = localStorage.getItem('token');
+const ROLE = localStorage.getItem('role');
+const NICK = localStorage.getItem('nickname');
+if (!TOKEN) location.href = '/login.html';
+
+const $ = s => document.querySelector(s);
+const COLORS = ['#1890ff','#52c41a','#faad14','#f5222d','#722ed1','#13c2c2','#eb2f96'];
+const charts = {};
+
+async function api(url, opts = {}) {
+  const res = await fetch(url, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', 'X-Token': TOKEN, ...(opts.headers||{}) },
+  });
+  if (res.status === 401) { localStorage.clear(); location.href = '/login.html'; throw new Error('未登录'); }
+  return res.json();
+}
+const post = (url, body) => api(url, { method:'POST', body: JSON.stringify(body||{}) });
+const put = (url, body) => api(url, { method:'PUT', body: JSON.stringify(body||{}) });
+const del = url => api(url, { method:'DELETE' });
+
+function doLogout() { post('/api/logout').finally(() => { localStorage.clear(); location.href='/login.html'; }); }
+
+// ---------- 通用图表 ----------
+function initChart(id) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  if (!charts[id]) charts[id] = echarts.init(el);
+  return charts[id];
+}
+function yAxisYi(name) {
+  return { type:'value', name, nameTextStyle:{fontSize:14,fontWeight:'bold',color:'#333',padding:[0,0,0,40]},
+    axisLabel:{ fontSize:14, fontWeight:'bold', color:'#333',
+      formatter: v => v >= 10000 ? (v/10000).toFixed(1)+'亿' : v+'万' },
+    splitLine:{ lineStyle:{color:'#e8e8e8'} } };
+}
+function yAxisPlain(name, fmt) {
+  return { type:'value', name, nameTextStyle:{fontSize:14,fontWeight:'bold',color:'#333'},
+    axisLabel:{ fontSize:14, fontWeight:'bold', color:'#333', formatter: fmt },
+    splitLine:{ lineStyle:{color:'#e8e8e8'} } };
+}
+function barChart(id, cats, vals, color, yFmt) {
+  const c = initChart(id); if (!c) return;
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:100,right:30,top:30,bottom:50},
+    xAxis:{type:'category',data:cats,axisLabel:{fontSize:13,color:'#333'}},
+    yAxis: yFmt === 'pct' ? yAxisPlain('占比','{value}%') : yFmt === 'count' ? yAxisPlain('条数') : yAxisYi('金额'),
+    series:[{type:'bar',data:vals,itemStyle:{color,borderRadius:[6,6,0,0]},
+      label:{show:true,position:'top',fontSize:13,fontWeight:'bold',
+        formatter: p => yFmt==='pct' ? p.value+'%' : yFmt==='count' ? p.value : (p.value/10000).toFixed(1)+'亿'}}]
+  });
+}
+function pieChart(id, names, vals) {
+  const c = initChart(id); if (!c) return;
+  c.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},
+    legend:{bottom:0,textStyle:{fontSize:13}},
+    color:COLORS,
+    series:[{type:'pie',radius:['38%','66%'],center:['50%','45%'],
+      data:names.map((n,i)=>({name:n,value:vals[i]})),
+      itemStyle:{borderColor:'#fff',borderWidth:2},label:{fontSize:13,formatter:'{b}\n{d}%'}}]
+  });
+}
+
+// ---------- 首页 ----------
+const KPI_CARDS = [
+  { key:'total', label:'数据总记录数', unit:'条', img:'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=ocean%20port%20cargo%20ship%20container%20trade%20blue%20sky&image_size=landscape_16_9', fmt:v=>v.toLocaleString() },
+  { key:'amount', label:'进出口总额', unit:'万元', img:'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=global%20trade%20shipping%20containers%20port%20sunset&image_size=landscape_16_9', fmt:v=>(v/10000).toFixed(2)+'亿' },
+  { key:'avg_pct', label:'平均贸易占比', unit:'%', img:'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=business%20analytics%20dashboard%20blue%20screen&image_size=landscape_16_9', fmt:v=>v },
+  { key:'avg_growth', label:'平均同比增长', unit:'%', img:'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=financial%20growth%20upward%20trend%20green&image_size=landscape_16_9', fmt:v=>v },
+  { key:'types', label:'贸易类型数', unit:'种', img:'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=colorful%20category%20boxes%20organized&image_size=landscape_16_9', fmt:v=>v },
+  { key:'countries', label:'地区类型数', unit:'类', img:'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=world%20map%20globe%20international%20trade&image_size=landscape_16_9', fmt:v=>v },
+];
+
+// 首页 KPI 卡片
+async function renderHomeKPI() {
+  const s = await api('/api/summary');
+  $('#kpi-row').innerHTML = KPI_CARDS.map(c =>
+    `<div class="kpi-card" style="background-image:url('${c.img}')"><div class="ov">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.fmt(s[c.key])}<span class="kpi-unit">${c.unit}</span></div>
+    </div></div>`).join('');
+}
+
+// 首页图表
+async function renderHomeCharts() {
+  const tt = await api('/api/trade_type');
+  const c1 = initChart('home-trade');
+  if (c1) c1.setOption({
+    tooltip:{trigger:'axis'}, grid:{left:100,right:30,top:30,bottom:50},
+    xAxis:{type:'category',data:tt.types,axisLabel:{fontSize:13,color:'#333'}},
+    yAxis:yAxisYi('金额'),
+    series:[{type:'bar',data:tt.amounts,itemStyle:{color:'#1890ff',borderRadius:[6,6,0,0]},
+      label:{show:true,position:'top',fontSize:13,fontWeight:'bold',formatter:p=>(p.value/10000).toFixed(1)+'亿'}}]
+  });
+  const ct = await api('/api/country_type');
+  const c2 = initChart('home-country');
+  if (c2) c2.setOption({
+    tooltip:{trigger:'axis'}, grid:{left:100,right:30,top:30,bottom:50},
+    xAxis:{type:'category',data:ct.countries,axisLabel:{fontSize:13,color:'#333'}},
+    yAxis:yAxisYi('金额'),
+    series:[{type:'bar',data:ct.amounts,itemStyle:{color:'#52c41a',borderRadius:[6,6,0,0]},
+      label:{show:true,position:'top',fontSize:13,fontWeight:'bold',formatter:p=>(p.value/10000).toFixed(1)+'亿'}}]
+  });
+}
+
+async function loadNoticeBanner() {
+  const d = await api('/api/announcements');
+  if (d.announcements && d.announcements.length) {
+    const a = d.announcements[0];
+    $('#notice-banner').style.display = 'block';
+    $('#notice-banner').innerHTML = `<b>📢 最新公告【${a.title}】：</b>${a.content}`;
+  }
+}
+
+// ---------- 用户管理模块 ----------
+async function renderProfile() {
+  const d = await api('/api/profile');
+  const p = d.profile;
+  $('#pf-username').value = p.username;
+  $('#pf-role').value = p.role === 'admin' ? '管理员' : '普通用户';
+  $('#pf-nickname').value = p.nickname || '';
+  $('#pf-email').value = p.email || '';
+}
+async function saveProfile() {
+  const body = { nickname: $('#pf-nickname').value.trim(), email: $('#pf-email').value.trim() };
+  const pwd = $('#pf-password').value;
+  if (pwd) body.password = pwd;
+  const d = await post('/api/profile', body);
+  alert(d.msg || (d.ok ? '已保存' : '保存失败'));
+}
+
+async function renderUsers() {
+  const d = await api('/api/users');
+  $('#users-body').innerHTML = d.users.map(u => `<tr>
+    <td>${u.id}</td><td>${u.username}</td><td>${u.nickname||''}</td><td>${u.email||''}</td>
+    <td><span class="tag ${u.role==='admin'?'orange':''}">${u.role==='admin'?'管理员':'用户'}</span></td>
+    <td>${u.created_at||''}</td>
+    <td>${u.username==='admin' ? '<span style="color:#bbb">内置账号</span>' :
+      `<button class="btn sm danger" onclick="delUser(${u.id})">删除</button>`}</td>
+  </tr>`).join('');
+}
+async function delUser(id) {
+  if (!confirm('确定删除该用户？')) return;
+  const d = await del('/api/users?id=' + id);
+  alert(d.msg); renderUsers();
+}
+function showUserModal() {
+  openModal('新增用户', `
+    <div class="detail-row"><div class="k">用户名</div><div class="v"><input id="nu-username" style="width:100%;padding:6px 10px;border:1px solid #d9d9d9;border-radius:5px"></div></div>
+    <div class="detail-row"><div class="k">密码</div><div class="v"><input id="nu-password" type="password" style="width:100%;padding:6px 10px;border:1px solid #d9d9d9;border-radius:5px"></div></div>
+    <div class="detail-row"><div class="k">昵称</div><div class="v"><input id="nu-nickname" style="width:100%;padding:6px 10px;border:1px solid #d9d9d9;border-radius:5px"></div></div>
+    <div class="detail-row"><div class="k">角色</div><div class="v"><select id="nu-role" style="width:100%;padding:6px 10px"><option value="user">用户</option><option value="admin">管理员</option></select></div></div>
+    <div style="margin-top:14px;text-align:right"><button class="btn primary" onclick="addUser()">保存</button></div>`);
+}
+async function addUser() {
+  const d = await post('/api/users', {
+    username: $('#nu-username').value.trim(), password: $('#nu-password').value,
+    nickname: $('#nu-nickname').value.trim(), role: $('#nu-role').value });
+  alert(d.msg); closeModal(); renderUsers();
+}
+
+// ---------- 贸易信息管理模块 ----------
+let mgmtPageNo = 1;
+async function loadMgmt(page = 1) {
+  mgmtPageNo = page;
+  const d = await api(`/api/records?page=${page}&size=15`);
+  $('#mgmt-body').innerHTML = d.records.map(r => `<tr>
+    <td>${r.id}</td><td>${r['统计日期']}</td><td><span class="tag">${r['贸易类型']}</span></td>
+    <td>${r['国家类型']}</td><td>${r['进出口总额'].toLocaleString()}</td><td>${r['占比']}</td>
+    <td>${growthTag(r['同比增长'])}</td><td>${r['数据来源']}</td>
+    <td>
+      <button class="btn sm" onclick="showEditModal(${r.id})">编辑</button>
+      <button class="btn sm danger" onclick="deleteRecord(${r.id})">删除</button>
+    </td></tr>`).join('');
+  const tp = Math.ceil(d.total / d.size);
+  $('#mgmt-info').textContent = `${d.page} / ${tp}（共 ${d.total} 条）`;
+  $('#mgmt-prev').disabled = page <= 1;
+  $('#mgmt-next').disabled = page >= tp;
+}
+function mgmtPage(delta) { loadMgmt(mgmtPageNo + delta); }
+function growthTag(v) {
+  const cls = v >= 10 ? 'green' : v >= 0 ? 'orange' : 'red';
+  return `<span class="tag ${cls}">${v}</span>`;
+}
+
+function recordFormFields(r = {}) {
+  return `
+    <div class="detail-row"><div class="k">统计日期</div><div class="v"><input id="rf-date" type="date" value="${r['统计日期']||''}"></div></div>
+    <div class="detail-row"><div class="k">贸易类型</div><div class="v"><input id="rf-type" value="${r['贸易类型']||''}"></div></div>
+    <div class="detail-row"><div class="k">地区（国家类型）</div><div class="v"><input id="rf-country" value="${r['国家类型']||''}"></div></div>
+    <div class="detail-row"><div class="k">进出口总额(万元)</div><div class="v"><input id="rf-amount" type="number" step="0.01" value="${r['进出口总额']??''}"></div></div>
+    <div class="detail-row"><div class="k">占比(%)</div><div class="v"><input id="rf-pct" type="number" step="0.01" value="${r['占比']??''}"></div></div>
+    <div class="detail-row"><div class="k">同比增长(%)</div><div class="v"><input id="rf-growth" type="number" step="0.01" value="${r['同比增长']??''}"></div></div>
+    <div class="detail-row"><div class="k">数据来源</div><div class="v"><input id="rf-source" value="${r['数据来源']||'手工录入'}"></div></div>`;
+}
+function readRecordForm() {
+  return {
+    '统计日期': $('#rf-date').value, '贸易类型': $('#rf-type').value.trim(),
+    '国家类型': $('#rf-country').value.trim(), '进出口总额': $('#rf-amount').value,
+    '占比': $('#rf-pct').value, '同比增长': $('#rf-growth').value,
+    '数据来源': $('#rf-source').value.trim() };
+}
+function showAddModal() {
+  openModal('新增贸易记录', recordFormFields() +
+    '<div style="margin-top:14px;text-align:right"><button class="btn primary" onclick="addRecord()">保存</button></div>');
+}
+async function addRecord() {
+  const d = await post('/api/records', readRecordForm());
+  alert(d.msg); closeModal(); loadMgmt(1);
+}
+async function showEditModal(id) {
+  const d = await api('/api/records/detail?id=' + id);
+  openModal('编辑记录 #' + id, recordFormFields(d.record) +
+    '<div style="margin-top:14px;text-align:right"><button class="btn primary" onclick="updateRecord(' + id + ')">保存修改</button></div>');
+}
+async function updateRecord(id) {
+  const body = readRecordForm(); body.id = id;
+  const d = await put('/api/records', body);
+  alert(d.msg); closeModal(); loadMgmt(mgmtPageNo);
+}
+async function deleteRecord(id) {
+  if (!confirm('确定删除记录 #' + id + '？')) return;
+  const d = await del('/api/records?id=' + id);
+  alert(d.msg); loadMgmt(mgmtPageNo);
+}
+
+async function renderCategories() {
+  const d = await api('/api/categories');
+  const rowHtml = (items, field) => items.map(x => `<tr>
+    <td><span class="tag">${x.name}</span></td><td>${x.count}</td>
+    <td><button class="btn sm" onclick="renameCat('${field}','${x.name}')">重命名</button>
+        <button class="btn sm danger" onclick="deleteCat('${field}','${x.name}',${x.count})">删除</button></td>
+  </tr>`).join('');
+  $('#cat-types').innerHTML = rowHtml(d.types, 'trade');
+  $('#cat-countries').innerHTML = rowHtml(d.countries, 'country');
+}
+function renameCat(field, old) {
+  const nw = prompt(`将「${old}」重命名为：`);
+  if (!nw) return;
+  post('/api/categories/rename', { field, old, new: nw }).then(d => { alert(d.msg); renderCategories(); });
+}
+function deleteCat(field, name, count) {
+  if (!confirm(`删除分类「${name}」将同时删除其 ${count} 条记录，确定？`)) return;
+  post('/api/categories/delete', { field, name }).then(d => { alert(d.msg); renderCategories(); });
+}
+
+async function loadDetailForEdit() {
+  const id = $('#dm-id').value;
+  if (!id) return alert('请输入记录 ID');
+  const d = await api('/api/records/detail?id=' + id);
+  const r = d.record;
+  $('#dm-form').style.display = 'block';
+  $('#dm-date').value = r['统计日期']; $('#dm-type').value = r['贸易类型'];
+  $('#dm-country').value = r['国家类型']; $('#dm-amount').value = r['进出口总额'];
+  $('#dm-pct').value = r['占比']; $('#dm-growth').value = r['同比增长'];
+  $('#dm-source').value = r['数据来源'];
+}
+async function saveDetailEdit() {
+  const body = {
+    id: $('#dm-id').value, '统计日期': $('#dm-date').value, '贸易类型': $('#dm-type').value.trim(),
+    '国家类型': $('#dm-country').value.trim(), '进出口总额': $('#dm-amount').value,
+    '占比': $('#dm-pct').value, '同比增长': $('#dm-growth').value, '数据来源': $('#dm-source').value };
+  const d = await put('/api/records', body);
+  alert(d.msg);
+}
+
+async function renderQuality() {
+  const d = await api('/api/quality');
+  const cards = [
+    { l: '总记录数', v: d.total, c: '#1890ff' },
+    { l: '含空值记录', v: d.null_rows, c: '#fa8c16' },
+    { l: '重复记录', v: d.dup_rows, c: '#722ed1' },
+    { l: '日期异常记录', v: d.bad_date, c: '#f5222d' },
+  ];
+  $('#quality-cards').innerHTML = cards.map(x =>
+    `<div class="stat-card"><div class="v" style="color:${x.c}">${x.v}</div><div class="l">${x.l}</div></div>`).join('');
+  $('#quality-msg').textContent = '';
+}
+async function cleanData() {
+  if (!confirm('确定清理关键字段为空的记录？')) return;
+  const d = await post('/api/quality/clean');
+  $('#quality-msg').textContent = d.msg;
+  renderQuality();
+}
+
+// ---------- 贸易查询模块 ----------
+function resultsTable(records) {
+  if (!records.length) return '<div class="empty">未查询到符合条件的记录</div>';
+  return `<table><thead><tr><th>ID</th><th>统计日期</th><th>贸易类型</th><th>地区</th>
+    <th>总额(万元)</th><th>占比(%)</th><th>同比增长(%)</th><th>数据来源</th><th>操作</th></tr></thead><tbody>` +
+    records.map(r => `<tr>
+      <td>${r.id}</td><td>${r['统计日期']}</td><td><span class="tag">${r['贸易类型']}</span></td>
+      <td>${r['国家类型']}</td><td>${r['进出口总额'].toLocaleString()}</td><td>${r['占比']}</td>
+      <td>${growthTag(r['同比增长'])}</td><td>${r['数据来源']}</td>
+      <td><button class="btn sm" onclick="viewDetail(${r.id})">详情</button></td></tr>`).join('') +
+    '</tbody></table>';
+}
+async function queryRecords(extra) {
+  const d = await api('/api/records?page=1&size=20' + (extra||''));
+  return d.records;
+}
+async function runSearch() {
+  const kw = $('#q-keyword').value.trim();
+  $('#q-table').innerHTML = resultsTable(await queryRecords('&q=' + encodeURIComponent(kw)));
+}
+async function runCountryFilter() {
+  const v = $('#f-country').value;
+  $('#fc-table').innerHTML = resultsTable(await queryRecords(v ? '&country=' + encodeURIComponent(v) : ''));
+}
+async function runTypeFilter() {
+  const v = $('#f-type').value;
+  $('#ft-table').innerHTML = resultsTable(await queryRecords(v ? '&type=' + encodeURIComponent(v) : ''));
+}
+async function runPctFilter() {
+  const mn = $('#f-minpct').value, mx = $('#f-maxpct').value;
+  let extra = '';
+  if (mn !== '') extra += '&min_pct=' + mn;
+  if (mx !== '') extra += '&max_pct=' + mx;
+  $('#fp-table').innerHTML = resultsTable(await queryRecords(extra));
+}
+function viewDetail(id) { localStorage.setItem('view_detail_id', id); location.hash = 'detail_view'; switchView('detail_view'); }
+async function showDetailPage() {
+  const id = $('#dv-id').value || localStorage.getItem('view_detail_id');
+  localStorage.removeItem('view_detail_id');
+  if (!id) return;
+  $('#dv-id').value = id;
+  const d = await api('/api/records/detail?id=' + id);
+  const r = d.record;
+  $('#dv-result').innerHTML = `<div class="detail-row"><div class="k">记录 ID</div><div class="v">${r.id}</div></div>
+    <div class="detail-row"><div class="k">统计日期</div><div class="v">${r['统计日期']}</div></div>
+    <div class="detail-row"><div class="k">贸易类型</div><div class="v"><span class="tag">${r['贸易类型']}</span></div></div>
+    <div class="detail-row"><div class="k">地区</div><div class="v">${r['国家类型']}</div></div>
+    <div class="detail-row"><div class="k">进出口总额(万元)</div><div class="v">${r['进出口总额'].toLocaleString()}</div></div>
+    <div class="detail-row"><div class="k">占比(%)</div><div class="v">${r['占比']}%</div></div>
+    <div class="detail-row"><div class="k">同比增长(%)</div><div class="v">${growthTag(r['同比增长'])}</div></div>
+    <div class="detail-row"><div class="k">数据来源</div><div class="v">${r['数据来源']}</div></div>`;
+}
+
+// ---------- 数据分析与可视化模块 ----------
+async function renderAnaPct() {
+  const tt = await api('/api/trade_type');
+  barChart('ch-pct', tt.types, tt.pcts, '#1890ff', 'pct');
+  const ct = await api('/api/country_type');
+  pieChart('ch-pct2', ct.countries, ct.pcts);
+}
+async function renderAnaGrowth() {
+  const g = await api('/api/growth');
+  barChart('ch-growth', g.bins, g.counts, '#722ed1', 'count');
+  const m = await api('/api/monthly');
+  const c = initChart('ch-growth2');
+  if (c) c.setOption({
+    tooltip:{trigger:'axis'}, grid:{left:100,right:30,top:30,bottom:50},
+    xAxis:{type:'category',data:m.months,axisLabel:{fontSize:13,color:'#333'}},
+    yAxis:yAxisPlain('占比','{value}%'),
+    series:[{type:'line',smooth:true,data:m.pcts,itemStyle:{color:'#faad14'},lineStyle:{width:3},areaStyle:{opacity:.15}}]
+  });
+}
+async function renderAnaAmount() {
+  const tt = await api('/api/trade_type');
+  barChart('ch-amount', tt.types, tt.amounts, '#1890ff');
+  const m = await api('/api/monthly');
+  const c = initChart('ch-amount2');
+  if (c) c.setOption({
+    tooltip:{trigger:'axis'}, grid:{left:100,right:30,top:30,bottom:50},
+    xAxis:{type:'category',data:m.months,axisLabel:{fontSize:13,color:'#333'}},
+    yAxis:yAxisYi('金额'),
+    series:[{type:'bar',data:m.amounts,itemStyle:{color:'rgba(24,144,255,.65)',borderRadius:[6,6,0,0]},
+      label:{show:true,position:'top',fontSize:12,fontWeight:'bold',formatter:p=>(p.value/10000).toFixed(1)+'亿'}}]
+  });
+}
+async function renderAnaHot() {
+  const h = await api('/api/hot');
+  barChart('ch-hot1', h.type_names, h.type_counts, '#f5222d', 'count');
+  barChart('ch-hot2', h.country_names, h.country_counts, '#13c2c2', 'count');
+}
+async function renderAnaRegion() {
+  const ct = await api('/api/country_type');
+  barChart('ch-region', ct.countries, ct.amounts, '#52c41a');
+  pieChart('ch-region2', ct.countries, ct.pcts);
+}
+async function renderAnaType() {
+  const cr = await api('/api/cross');
+  const c = initChart('ch-cross'); if (!c) return;
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:cr.countries,top:0,textStyle:{fontSize:13}},
+    grid:{left:110,right:30,top:50,bottom:60},
+    xAxis:{type:'category',data:cr.types,axisLabel:{rotate:20,fontSize:13,color:'#333'}},
+    yAxis:yAxisYi('金额'),
+    series: cr.series.map((s,i)=>({name:s.name,type:'bar',stack:'total',data:s.data,itemStyle:{color:COLORS[i%COLORS.length]}}))
+  });
+}
+
+// ---------- 系统管理模块 ----------
+// ---------- 公告管理（按图片布局：新增/批量导入/下载模板 + 内容/详细/删除） ----------
+let ntPageNo = 1;
+async function renderNotices(page = 1) {
+  ntPageNo = page;
+  const d = await api(`/api/announcements?page=${page}&size=10`);
+  $('#notices-body').innerHTML = (d.announcements || []).map(a => `<tr>
+    <td>${a.id}</td>
+    <td><b>${a.title}</b></td>
+    <td><span class="tag">${a.category || '通知'}</span></td>
+    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.summary || ''}</td>
+    <td>${a.clicks || 0}</td>
+    <td>${a.publisher || ''}</td>
+    <td>${a.created_at || ''}</td>
+    <td>
+      <button class="btn sm" onclick="viewNoticeContent(${a.id})">内容</button>
+      <button class="btn sm" onclick="editNotice(${a.id})">详细</button>
+      <button class="btn sm danger" onclick="delNotice(${a.id})">删除</button>
+    </td></tr>`).join('') || '<tr><td colspan="8" class="empty">暂无公告</td></tr>';
+  const tp = Math.max(1, Math.ceil(d.total / d.size));
+  $('#nt-info').textContent = `${d.page} / ${tp}（共 ${d.total} 条）`;
+  $('#nt-prev').disabled = page <= 1;
+  $('#nt-next').disabled = page >= tp;
+}
+function noticePage(delta) { renderNotices(ntPageNo + delta); }
+
+// 公告编辑弹窗（与图片"请填写信息"弹窗一致）
+function noticeFormHtml(a = {}) {
+  return `
+    <div class="detail-row"><div class="k">标题</div><div class="v"><input id="nf-title" value="${a.title || ''}" style="width:100%;padding:7px 10px;border:1px solid #d9d9d9;border-radius:5px"></div></div>
+    <div class="detail-row"><div class="k">类别</div><div class="v"><input id="nf-category" value="${a.category || '通知'}" style="width:100%;padding:7px 10px;border:1px solid #d9d9d9;border-radius:5px"></div></div>
+    <div class="detail-row"><div class="k">首页图片</div><div class="v">
+      <input id="nf-image" value="${a.image || ''}" placeholder="图片URL" style="width:100%;padding:7px 10px;border:1px solid #d9d9d9;border-radius:5px" oninput="document.getElementById('nf-imgview').src=this.value">
+      <img id="nf-imgview" src="${a.image || ''}" style="margin-top:8px;max-width:100%;max-height:130px;border-radius:6px;display:${a.image ? 'block' : 'none'}" onerror="this.style.display='none'" onload="this.style.display='block'">
+    </div></div>
+    <div class="detail-row"><div class="k">摘要</div><div class="v"><textarea id="nf-summary" rows="3" style="width:100%;padding:7px 10px;border:1px solid #d9d9d9;border-radius:5px">${a.summary || ''}</textarea></div></div>
+    <div class="detail-row"><div class="k">内容</div><div class="v"><textarea id="nf-content" rows="4" style="width:100%;padding:7px 10px;border:1px solid #d9d9d9;border-radius:5px">${a.content || ''}</textarea></div></div>
+    <div class="detail-row"><div class="k">点击率</div><div class="v"><input id="nf-clicks" value="${a.clicks ?? 0}" disabled style="width:100%;padding:7px 10px;background:#f5f5f5;border:1px solid #d9d9d9;border-radius:5px"></div></div>
+    <div class="detail-row"><div class="k">发布人</div><div class="v"><input id="nf-publisher" value="${a.publisher || NICK || ''}" disabled style="width:100%;padding:7px 10px;background:#f5f5f5;border:1px solid #d9d9d9;border-radius:5px"></div></div>`;
+}
+function readNoticeForm() {
+  return {
+    title: $('#nf-title').value.trim(),
+    category: $('#nf-category').value.trim() || '通知',
+    image: $('#nf-image').value.trim(),
+    summary: $('#nf-summary').value.trim(),
+    content: $('#nf-content').value.trim(),
+  };
+}
+function showNoticeModal() {
+  openModal('请填写信息', noticeFormHtml() +
+    '<div style="margin-top:14px;text-align:right"><button class="btn primary" onclick="saveNotice()">保存</button></div>');
+}
+async function saveNotice() {
+  const body = readNoticeForm();
+  if (!body.title) return alert('标题不能为空');
+  const d = await post('/api/announcements', body);
+  alert(d.msg); closeModal(); renderNotices(1);
+}
+async function editNotice(id) {
+  const d = await api('/api/announcements/detail?id=' + id);
+  openModal('编辑公告 #' + id, noticeFormHtml(d.announcement) +
+    '<div style="margin-top:14px;text-align:right"><button class="btn primary" onclick="updateNotice(' + id + ')">保存修改</button></div>');
+}
+async function updateNotice(id) {
+  const body = readNoticeForm(); body.id = id;
+  const d = await put('/api/announcements', body);
+  alert(d.msg); closeModal(); renderNotices(ntPageNo);
+}
+async function viewNoticeContent(id) {
+  const d = await api('/api/announcements/detail?id=' + id);
+  const a = d.announcement;
+  openModal('公告内容', `
+    ${a.image ? `<img src="${a.image}" style="max-width:100%;border-radius:6px;margin-bottom:12px">` : ''}
+    <div class="detail-row"><div class="k">标题</div><div class="v">${a.title}</div></div>
+    <div class="detail-row"><div class="k">类别</div><div class="v"><span class="tag">${a.category}</span></div></div>
+    <div class="detail-row"><div class="k">内容</div><div class="v" style="font-weight:normal;line-height:1.7">${a.content || '（无正文）'}</div></div>
+    <div class="detail-row"><div class="k">点击率</div><div class="v">${a.clicks}</div></div>
+    <div class="detail-row"><div class="k">发布人</div><div class="v">${a.publisher}</div></div>
+    <div class="detail-row"><div class="k">发布时间</div><div class="v">${a.created_at}</div></div>`);
+  renderNotices(ntPageNo);  // 点击率+1后刷新列表
+}
+async function delNotice(id) {
+  if (!confirm('确定删除该公告？')) return;
+  await del('/api/announcements?id=' + id);
+  renderNotices(ntPageNo);
+}
+function downloadTemplate() {
+  // 携带 token 下载模板（a 标签不带请求头，改用 fetch）
+  fetch('/api/announcements/template', { headers: { 'X-Token': TOKEN } })
+    .then(r => r.blob())
+    .then(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '公告导入模板.csv';
+      a.click();
+    });
+}
+function importNotices(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const lines = reader.result.replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+    const items = [];
+    for (let i = 1; i < lines.length; i++) {   // 跳过表头
+      const cols = lines[i].split(',');
+      if (cols[0] && cols[0].trim()) {
+        items.push({ '标题': cols[0].trim(), '类别': (cols[1]||'').trim(), '摘要': (cols[2]||'').trim(), '内容': (cols[3]||'').trim() });
+      }
+    }
+    const d = await post('/api/announcements/import', { items });
+    alert(d.msg);
+    input.value = '';
+    renderNotices(1);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+async function renderStats() {
+  const d = await api('/api/stats');
+  const cards = [
+    { l: '贸易数据记录', v: d.records.toLocaleString() },
+    { l: '系统用户数', v: d.users },
+    { l: '公告数量', v: d.announcements },
+    { l: 'CSV 源文件行数', v: d.csv_rows.toLocaleString() },
+    { l: '贸易类型数', v: d.types },
+    { l: '地区类型数', v: d.countries },
+    { l: 'MySQL 状态', v: d.mysql_ok ? '正常' : '不可用' },
+    { l: '数据一致率', v: d.csv_rows ? ((d.records / d.csv_rows) * 100).toFixed(1) + '%' : '--' },
+  ];
+  $('#stat-cards').innerHTML = cards.map(x =>
+    `<div class="stat-card"><div class="v">${x.v}</div><div class="l">${x.l}</div></div>`).join('');
+}
+
+async function importCsv() {
+  const d = await post('/api/maintenance/import_csv');
+  $('#maint-msg').textContent = d.msg || (d.ok ? '导入成功' : '导入失败');
+}
+async function reloadData() {
+  const d = await post('/api/maintenance/reload');
+  $('#maint-msg').textContent = d.msg;
+}
+
+async function renderSysinfo() {
+  const d = await api('/api/system_info');
+  const rows = [
+    ['系统名称', d.app], ['Python 版本', d.python], ['操作系统', d.platform],
+    ['MySQL 版本', d.mysql], ['当前数据源', d.datasource], ['数据记录数', d.records.toLocaleString()],
+    ['服务端口', d.port], ['服务运行时长', d.uptime],
+  ];
+  $('#sysinfo-body').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+}
+
+// ---------- 弹窗 ----------
+function openModal(title, html) {
+  $('#modal-title').textContent = title;
+  $('#modal-body').innerHTML = html;
+  $('#modal-mask').classList.add('show');
+}
+function closeModal() { $('#modal-mask').classList.remove('show'); }
+$('#modal-mask').addEventListener('click', e => { if (e.target.id === 'modal-mask') closeModal(); });
+
+// ---------- 视图切换 ----------
+const RENDERERS = {
+  home: () => { renderHomeKPI(); renderHomeCharts(); loadNoticeBanner(); },
+  profile: renderProfile,
+  users: renderUsers,
+  records_mgmt: () => loadMgmt(1),
+  categories: renderCategories,
+  detail_mgmt: () => { $('#dm-form').style.display = 'none'; },
+  quality: renderQuality,
+  search: () => runSearch(),
+  filter_country: async () => {
+    const d = await api('/api/categories');
+    $('#f-country').innerHTML = '<option value="">全部地区</option>' +
+      d.countries.map(c => `<option value="${c.name}">${c.name}（${c.count}）</option>`).join('');
+    runCountryFilter();
+  },
+  filter_type: async () => {
+    const d = await api('/api/categories');
+    $('#f-type').innerHTML = '<option value="">全部类型</option>' +
+      d.types.map(c => `<option value="${c.name}">${c.name}（${c.count}）</option>`).join('');
+    runTypeFilter();
+  },
+  filter_pct: () => runPctFilter(),
+  detail_view: showDetailPage,
+  ana_pct: renderAnaPct,
+  ana_growth: renderAnaGrowth,
+  ana_amount: renderAnaAmount,
+  ana_hot: renderAnaHot,
+  ana_region: renderAnaRegion,
+  ana_type: renderAnaType,
+  notices: renderNotices,
+  stats: renderStats,
+  maintenance: () => { $('#maint-msg').textContent = ''; },
+  sysinfo: renderSysinfo,
+};
+const TITLES = {
+  home:'首页概览', profile:'个人信息管理', users:'用户账号管理',
+  records_mgmt:'贸易信息管理', categories:'贸易分类管理', detail_mgmt:'贸易详情管理', quality:'贸易信息维护',
+  search:'贸易搜索', filter_country:'地区筛选', filter_type:'类型筛选', filter_pct:'占比筛选', detail_view:'详情查看',
+  ana_pct:'贸易占比分析', ana_growth:'贸易增长分析', ana_amount:'贸易金额分析',
+  ana_hot:'贸易热度分析', ana_region:'地区分布分析', ana_type:'贸易类型分析',
+  notices:'公告管理', stats:'数据统计', maintenance:'数据维护', sysinfo:'系统信息管理',
+};
+
+function switchView(view) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + view);
+  if (el) el.classList.add('active');
+  $('#page-title').textContent = TITLES[view] || view;
+  if (RENDERERS[view]) RENDERERS[view]();
+  setTimeout(() => Object.values(charts).forEach(c => c.resize()), 100);
+}
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => switchView(item.dataset.view));
+});
+window.addEventListener('resize', () => Object.values(charts).forEach(c => c.resize()));
+// location.hash 联动（详情跳转）
+window.addEventListener('hashchange', () => {
+  const v = location.hash.replace('#','');
+  if (TITLES[v]) switchView(v);
+});
+
+// ---------- 初始化 ----------
+(function init() {
+  $('#nick').textContent = NICK || '--';
+  $('#role-badge').textContent = ROLE === 'admin' ? '管理员' : '普通用户';
+  document.querySelectorAll('.nav-item.admin-only').forEach(n => {
+    if (ROLE !== 'admin') n.style.display = 'none';
+  });
+  renderHomeKPI();
+  renderHomeCharts();
+  loadNoticeBanner();
+})();
+</script>
+</body>
+</html>
