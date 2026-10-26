@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增商品 - 商品管理系统</title>
+    <link rel="stylesheet" th:href="@{/lizhenqi/css/app.css}">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-mark">SP</span>
+            <span class="logo-title">商品管理系统</span>
+        </div>
+        <nav class="menu">
+            <a class="menu-item" href="/">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>首页</span>
+            </a>
+            <a class="menu-item active" href="/lizhenqi/shangpin">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+                <span>商品管理</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">李贞琦 · 商品管理系统</div>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <div class="breadcrumb">
+                <a href="/">首页</a>
+                <span>/</span>
+                <a href="/lizhenqi/shangpin">商品管理</a>
+                <span>/</span>
+                <span class="current">新增商品</span>
+            </div>
+            <div class="user">
+                <span class="avatar">李</span>
+                <span>李贞琦</span>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="page-header">
+                <div>
+                    <h1>新增商品</h1>
+                    <p class="page-desc">填写商品基本信息，带 * 的为必填项</p>
+                </div>
+                <a class="btn" href="/lizhenqi/shangpin">返回列表</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">商品信息</div>
+                <form class="form" action="/lizhenqi/shangpin/add" method="post">
+                    <div class="form-item">
+                        <label class="form-label" for="mingcheng"><span class="required">*</span>商品名称</label>
+                        <div class="form-control">
+                            <input class="el-input" type="text" id="mingcheng" name="mingcheng" required placeholder="请输入商品名称">
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <label class="form-label" for="leibie">商品类别</label>
+                        <div class="form-control">
+                            <select class="el-select" id="leibie" name="leibie">
+                                <option value="">请选择类别</option>
+                                <option value="电子产品">电子产品</option>
+                                <option value="服装鞋帽">服装鞋帽</option>
+                                <option value="食品饮料">食品饮料</option>
+                                <option value="日用百货">日用百货</option>
+                                <option value="图书文具">图书文具</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <label class="form-label" for="jiage"><span class="required">*</span>商品价格</label>
+                        <div class="form-control">
+                            <input class="el-input" type="number" id="jiage" name="jiage" step="0.01" min="0" required placeholder="请输入商品价格">
+                            <div class="form-tip">单位：元</div>
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <label class="form-label" for="kucun">库存数量</label>
+                        <div class="form-control">
+                            <input class="el-input" type="number" id="kucun" name="kucun" min="0" value="0" placeholder="请输入库存数量">
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <label class="form-label" for="beizhu">备注信息</label>
+                        <div class="form-control">
+                            <textarea class="el-textarea" id="beizhu" name="beizhu" placeholder="请输入备注信息"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">保存</button>
+                        <a href="/lizhenqi/shangpin" class="btn">取消</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>

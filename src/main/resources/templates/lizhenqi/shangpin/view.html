@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品详情 - 商品管理系统</title>
+    <link rel="stylesheet" th:href="@{/lizhenqi/css/app.css}">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-mark">SP</span>
+            <span class="logo-title">商品管理系统</span>
+        </div>
+        <nav class="menu">
+            <a class="menu-item" href="/">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>首页</span>
+            </a>
+            <a class="menu-item active" href="/lizhenqi/shangpin">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+                <span>商品管理</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">李贞琦 · 商品管理系统</div>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <div class="breadcrumb">
+                <a href="/">首页</a>
+                <span>/</span>
+                <a href="/lizhenqi/shangpin">商品管理</a>
+                <span>/</span>
+                <span class="current">商品详情</span>
+            </div>
+            <div class="user">
+                <span class="avatar">李</span>
+                <span>李贞琦</span>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="page-header">
+                <div>
+                    <h1>商品详情</h1>
+                    <p class="page-desc" th:text="|商品 ID：${lizhenqiShangpin.id}|">商品 ID：1</p>
+                </div>
+                <a class="btn" href="/lizhenqi/shangpin">返回列表</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>基本信息</span>
+                    <span class="tag primary" th:text="${lizhenqiShangpin.leibie} ?: '未分类'">类别</span>
+                </div>
+                <div class="card-body">
+                    <div class="descriptions">
+                        <div class="item">
+                            <div class="label">商品 ID</div>
+                            <div class="value" th:text="${lizhenqiShangpin.id}">1</div>
+                        </div>
+                        <div class="item">
+                            <div class="label">商品名称</div>
+                            <div class="value" th:text="${lizhenqiShangpin.mingcheng}">商品名称</div>
+                        </div>
+                        <div class="item">
+                            <div class="label">商品类别</div>
+                            <div class="value" th:text="${lizhenqiShangpin.leibie}" th:if="${lizhenqiShangpin.leibie != null and not lizhenqiShangpin.leibie.isEmpty()}">类别</div>
+                            <div class="value empty" th:if="${lizhenqiShangpin.leibie == null or lizhenqiShangpin.leibie.isEmpty()}">未设置</div>
+                        </div>
+                        <div class="item">
+                            <div class="label">商品价格</div>
+                            <div class="value price" th:text="${lizhenqiShangpin.jiage != null ? '¥ ' + lizhenqiShangpin.jiage : '-'}">¥ 0.00</div>
+                        </div>
+                        <div class="item">
+                            <div class="label">库存数量</div>
+                            <div class="value">
+                                <span th:class="${lizhenqiShangpin.kucun != null && lizhenqiShangpin.kucun > 100 ? 'tag success' : (lizhenqiShangpin.kucun != null && lizhenqiShangpin.kucun > 10 ? 'tag warning' : 'tag danger')}"
+                                      th:text="${lizhenqiShangpin.kucun != null ? lizhenqiShangpin.kucun + ' 件' : '0 件'}">0 件</span>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="label">创建时间</div>
+                            <div class="value" th:text="${lizhenqiShangpin.chuangjianShijian != null ? #dates.format(lizhenqiShangpin.chuangjianShijian, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-01-01 00:00:00</div>
+                        </div>
+                        <div class="item">
+                            <div class="label">更新时间</div>
+                            <div class="value" th:text="${lizhenqiShangpin.gengxinShijian != null ? #dates.format(lizhenqiShangpin.gengxinShijian, 'yyyy-MM-dd HH:mm:ss') : '-'}">2026-01-01 00:00:00</div>
+                        </div>
+                        <div class="item full">
+                            <div class="label">备注信息</div>
+                            <div class="value" th:text="${lizhenqiShangpin.beizhu}" th:if="${lizhenqiShangpin.beizhu != null and not lizhenqiShangpin.beizhu.isEmpty()}">备注</div>
+                            <div class="value empty" th:if="${lizhenqiShangpin.beizhu == null or lizhenqiShangpin.beizhu.isEmpty()}">无</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-actions">
+                        <a th:href="|/lizhenqi/shangpin/edit/${lizhenqiShangpin.id}|" class="btn btn-primary">编辑商品</a>
+                        <a href="/lizhenqi/shangpin" class="btn">返回列表</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>
