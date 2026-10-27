@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>分类管理</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">📁 分类管理</h2>
+    <div class="card">
+        <h3>新增分类</h3>
+        <form th:action="@{/admin/category/save}" method="post">
+            <div class="form-row">
+                <label>名称</label>
+                <input type="text" name="name" th:value="${category.name}" required/>
+            </div>
+            <div class="form-row">
+                <label>简介</label>
+                <input type="text" name="description" th:value="${category.description}"/>
+            </div>
+            <button type="submit" class="btn btn-primary">保存</button>
+        </form>
+    </div>
+
+    <table class="table" style="margin-top:15px">
+        <thead><tr><th>ID</th><th>名称</th><th>简介</th><th>操作</th></tr></thead>
+        <tbody>
+        <tr th:each="c : ${categories}">
+            <td th:text="${c.id}"></td>
+            <td th:text="${c.name}"></td>
+            <td th:text="${c.description}"></td>
+            <td>
+                <form th:action="@{/admin/category/delete}" method="post">
+                    <input type="hidden" name="id" th:value="${c.id}">
+                    <button class="btn btn-sm btn-ghost" onclick="return confirm('确认删除？')">删除</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</div></body>
+</html>

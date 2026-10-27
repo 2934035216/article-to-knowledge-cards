@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>用户管理</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">👥 用户管理</h2>
+    <table class="table">
+        <thead><tr><th>ID</th><th>账号</th><th>昵称</th><th>角色</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+        <tbody>
+        <tr th:each="u : ${users}">
+            <td th:text="${u.id}"></td>
+            <td th:text="${u.username}"></td>
+            <td th:text="${u.nickname}"></td>
+            <td><span class="role-tag" th:text="${u.role}"></span></td>
+            <td><span class="badge" th:classappend="${u.status == 'ACTIVE'} ? 'badge-active' : 'badge-banned'"
+                       th:text="${u.status}"></span></td>
+            <td th:text="${#temporals.format(u.createTime, 'yyyy-MM-dd HH:mm')}"></td>
+            <td>
+                <form th:if="${u.status == 'ACTIVE'}" th:action="@{/admin/user/{id}/ban(id=${u.id})}" method="post" style="display:inline">
+                    <button class="btn btn-sm btn-ghost" onclick="return confirm('确认禁用？')">禁用</button>
+                </form>
+                <form th:if="${u.status == 'BANNED'}" th:action="@{/admin/user/{id}/unban(id=${u.id})}" method="post" style="display:inline">
+                    <button class="btn btn-sm btn-outline">启用</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</div></body>
+</html>

@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>香水管理</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">🛍️ 香水管理</h2>
+    <a th:href="@{/merchant/perfume/add}" class="btn btn-primary">+ 新增香水</a>
+
+    <table class="table" style="margin-top:15px">
+        <thead><tr>
+            <th>ID</th><th>名称</th><th>品牌</th><th>分类</th><th>价格</th><th>库存</th><th>销量</th><th>操作</th>
+        </tr></thead>
+        <tbody>
+        <tr th:each="p : ${perfumes.content}">
+            <td th:text="${p.id}"></td>
+            <td th:text="${p.name}"></td>
+            <td th:text="${p.brandName}"></td>
+            <td th:text="${p.categoryName}"></td>
+            <td>¥<span th:text="${p.price}"></span></td>
+            <td th:text="${p.stock}"></td>
+            <td th:text="${p.sales}"></td>
+            <td>
+                <a th:href="@{/merchant/perfume/edit(id=${p.id})}" class="btn btn-sm btn-ghost">编辑</a>
+                <form th:action="@{/merchant/perfume/delete}" method="post" style="display:inline">
+                    <input type="hidden" name="id" th:value="${p.id}">
+                    <button type="submit" class="btn btn-sm btn-ghost" onclick="return confirm('确认删除？')">删除</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination" th:if="${perfumes.totalPages > 1}">
+        <a th:if="${perfumes.hasPrevious()}"
+           th:href="@{/merchant/perfumes(page=${perfumes.number - 1})}" class="btn btn-ghost">上一页</a>
+        <span th:text="'第 ' + ${perfumes.number + 1} + ' / ' + ${perfumes.totalPages} + ' 页'"></span>
+        <a th:if="${perfumes.hasNext()}"
+           th:href="@{/merchant/perfumes(page=${perfumes.number + 1})}" class="btn btn-ghost">下一页</a>
+    </div>
+</section>
+</div></body>
+</html>

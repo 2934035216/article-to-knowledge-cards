@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>我的收藏</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">❤️ 我的收藏</h2>
+    <div class="perfume-grid">
+        <div class="perfume-card" th:each="f : ${favorites}">
+            <a th:if="${f.perfume != null}" th:href="@{/perfume/detail(id=${f.perfume.id})}" class="card-link">
+                <div class="perfume-img">
+                    <img th:if="${f.perfume.imageUrl != null and !f.perfume.imageUrl.isEmpty()}" th:src="${f.perfume.imageUrl}" th:alt="${f.perfume.name}">
+                    <span th:if="${f.perfume.imageUrl == null or f.perfume.imageUrl.isEmpty()}" th:text="${f.perfume.name.substring(0,1)}"></span>
+                </div>
+                <div class="perfume-info">
+                    <h3 th:text="${f.perfume.name}">香水名</h3>
+                    <p class="perfume-meta">
+                        <span class="price" th:text="'¥' + ${f.perfume.price}">价格</span>
+                    </p>
+                </div>
+            </a>
+            <div th:if="${f.perfume == null}" class="empty">该香水已下架</div>
+        </div>
+    </div>
+    <div th:if="${#lists.isEmpty(favorites)}" class="empty">还没有收藏</div>
+</section>
+</div></body>
+</html>

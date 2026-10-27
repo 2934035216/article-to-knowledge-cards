@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>浏览记录</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">👣 浏览记录</h2>
+    <form th:action="@{/browse-history/clear}" method="post" style="float:right" th:if="${!#lists.isEmpty(records)}">
+        <button type="submit" class="btn btn-outline" onclick="return confirm('确认清空浏览记录？')">清空</button>
+    </form>
+    <div class="perfume-grid">
+        <div class="perfume-card" th:each="br : ${records}">
+            <a th:if="${br.perfume != null}" th:href="@{/perfume/detail(id=${br.perfume.id})}" class="card-link">
+                <div class="perfume-img">
+                <img th:if="${br.perfume.imageUrl != null and !br.perfume.imageUrl.isEmpty()}" th:src="${br.perfume.imageUrl}" th:alt="${br.perfume.name}">
+                <span th:if="${br.perfume.imageUrl == null or br.perfume.imageUrl.isEmpty()}" th:text="${br.perfume.name.substring(0,1)}"></span>
+            </div>
+                <div class="perfume-info">
+                    <h3 th:text="${br.perfume.name}">香水名</h3>
+                    <p class="perfume-meta">
+                        <span class="price" th:text="'¥' + ${br.perfume.price}">价格</span>
+                    </p>
+                    <p class="time" th:text="${#temporals.format(br.browseTime, 'yyyy-MM-dd HH:mm')}"></p>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div th:if="${#lists.isEmpty(records)}" class="empty">还没有浏览记录</div>
+</section>
+</div></body>
+</html>

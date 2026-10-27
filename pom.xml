@@ -9,8 +9,8 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>lizhenqi</name>
-    <description>商品管理系统 - 李贞琦</description>
+    <name>perfume-recommend</name>
+    <description>基于 SpringBoot 的香水推荐系统 - 李贞琦</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
