@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} ?: '香氛馆 · 香水推荐系统'">香氛馆 · 香水推荐系统</title>
+    <link rel="stylesheet" th:href="@{/lizhenqi/css/app.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="container header-inner">
+        <a th:href="@{/}" class="logo">🌸 香氛馆</a>
+
+        <nav class="nav">
+            <a th:href="@{/}">首页</a>
+            <a th:href="@{/perfumes}">全部香水</a>
+            <a th:if="${loginUser != null}" th:href="@{/recommend}">个性化推荐</a>
+            <a th:if="${loginUser != null}" th:href="@{/favorites}">我的收藏</a>
+            <a th:if="${loginUser != null}" th:href="@{/my-reviews}">我的评价</a>
+            <a th:if="${loginUser != null}" th:href="@{/browse-history}">浏览记录</a>
+            <a th:if="${loginUser != null}" th:href="@{/orders}">我的订单</a>
+            <a th:href="@{/notice/list}">公告</a>
+            <a th:if="${loginUser != null and loginUser.merchant}" th:href="@{/merchant/perfumes}">商家中心</a>
+            <a th:if="${loginUser != null and loginUser.admin}" th:href="@{/admin/stats}">管理后台</a>
+        </nav>
+
+        <div class="user-box">
+            <div th:if="${loginUser == null}">
+                <a th:href="@{/login(role='USER')}" class="btn btn-ghost">用户登录</a>
+                <a th:href="@{/login(role='MERCHANT')}" class="btn btn-ghost">商家登录</a>
+                <a th:href="@{/register(role='USER')}" class="btn btn-primary">注册</a>
+            </div>
+            <div th:if="${loginUser != null}" class="user-logged">
+                <span class="welcome">你好，
+                    <a th:href="@{/profile}" th:text="${loginUser.nickname} ?: ${loginUser.username}">User</a>
+                    <span class="role-tag" th:text="${loginUser.role}"></span>
+                </span>
+                <a th:href="@{/logout}" class="btn btn-ghost">退出</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+    <th:block th:replace="${content}"></th:block>
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        <p>© 2026 香氛馆 · 基于 SpringBoot 的香水推荐系统 · 李贞琦</p>
+    </div>
+</footer>
+
+</body>
+</html>

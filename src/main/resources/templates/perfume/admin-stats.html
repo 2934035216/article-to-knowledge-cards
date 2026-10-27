@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>数据统计</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">📊 数据统计</h2>
+
+    <div class="stat-grid">
+        <div class="stat-card stat-blue">
+            <div class="stat-num">¥<span th:text="${totalRevenue}">0</span></div>
+            <div class="stat-label">总营收</div>
+        </div>
+        <div class="stat-card stat-green">
+            <div class="stat-num" th:text="${totalOrders}">0</div>
+            <div class="stat-label">订单总数</div>
+        </div>
+    </div>
+
+    <h3 class="section-title">订单状态分布</h3>
+    <div class="stat-grid">
+        <div class="stat-card stat-pending">
+            <div class="stat-num" th:text="${statusMap['PENDING'] != null ? statusMap['PENDING'][1] : 0}">0</div>
+            <div class="stat-label">待支付</div>
+        </div>
+        <div class="stat-card stat-paid">
+            <div class="stat-num" th:text="${statusMap['PAID'] != null ? statusMap['PAID'][1] : 0}">0</div>
+            <div class="stat-label">已支付</div>
+        </div>
+        <div class="stat-card stat-shipped">
+            <div class="stat-num" th:text="${statusMap['SHIPPED'] != null ? statusMap['SHIPPED'][1] : 0}">0</div>
+            <div class="stat-label">已发货</div>
+        </div>
+        <div class="stat-card stat-completed">
+            <div class="stat-num" th:text="${statusMap['COMPLETED'] != null ? statusMap['COMPLETED'][1] : 0}">0</div>
+            <div class="stat-label">已完成</div>
+        </div>
+        <div class="stat-card stat-canceled">
+            <div class="stat-num" th:text="${statusMap['CANCELED'] != null ? statusMap['CANCELED'][1] : 0}">0</div>
+            <div class="stat-label">已取消</div>
+        </div>
+    </div>
+
+    <div class="admin-menu">
+        <a th:href="@{/admin/users}" class="btn btn-outline">用户管理</a>
+        <a th:href="@{/admin/brands}" class="btn btn-outline">品牌管理</a>
+        <a th:href="@{/admin/categories}" class="btn btn-outline">分类管理</a>
+        <a th:href="@{/admin/orders}" class="btn btn-outline">订单管理</a>
+        <a th:href="@{/admin/notices}" class="btn btn-outline">公告管理</a>
+    </div>
+</section>
+</div></body>
+</html>

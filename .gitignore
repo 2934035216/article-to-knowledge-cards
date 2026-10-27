@@ -11,6 +11,13 @@ env/
 .idea/
 .vscode/
 *.swp
+*.iml
+
+# Java/Maven
+target/
+
+# 截图
+.screenshots/
 
 # 系统文件
 .DS_Store

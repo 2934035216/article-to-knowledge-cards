@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>我的订单</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">📦 我的订单</h2>
+    <table class="table" th:if="${!#lists.isEmpty(orders)}">
+        <thead><tr>
+            <th>订单号</th><th>香水ID</th><th>数量</th><th>单价</th><th>总额</th><th>状态</th><th>创建时间</th><th>操作</th>
+        </tr></thead>
+        <tbody>
+        <tr th:each="o : ${orders}">
+            <td th:text="${o.orderNo}"></td>
+            <td th:text="${o.perfumeId}"></td>
+            <td th:text="${o.quantity}"></td>
+            <td>¥<span th:text="${o.price}"></span></td>
+            <td>¥<span th:text="${o.totalAmount}"></span></td>
+            <td><span class="badge" th:classappend="'badge-' + ${o.status}" th:text="${o.status}"></span></td>
+            <td th:text="${#temporals.format(o.createTime, 'yyyy-MM-dd HH:mm')}"></td>
+            <td><a th:href="@{/orders/detail(id=${o.id})}" class="btn btn-sm btn-ghost">查看</a></td>
+        </tr>
+        </tbody>
+    </table>
+    <div th:if="${#lists.isEmpty(orders)}" class="empty">还没有订单</div>
+</section>
+</div></body>
+</html>

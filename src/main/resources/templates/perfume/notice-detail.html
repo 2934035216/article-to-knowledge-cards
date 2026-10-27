@@ -1,0 +1,15 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>公告详情</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <article class="notice-detail">
+        <h1 th:text="${notice.title}"></h1>
+        <p class="time" th:text="${#temporals.format(notice.createTime, 'yyyy-MM-dd HH:mm')}"></p>
+        <div class="notice-body" th:utext="${notice.content}"></div>
+        <a th:href="@{/notice/list}" class="btn btn-outline">返回公告列表</a>
+    </article>
+</section>
+</div></body>
+</html>

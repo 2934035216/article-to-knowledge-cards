@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>香水表单</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title" th:text="${perfume.id != null} ? '编辑香水' : '新增香水'">香水表单</h2>
+    <div class="card">
+        <form th:action="@{/merchant/perfume/save}" method="post">
+            <input type="hidden" name="id" th:value="${perfume.id}">
+            <div class="form-row">
+                <label>名称</label>
+                <input type="text" name="name" th:value="${perfume.name}" required/>
+            </div>
+            <div class="form-row">
+                <label>品牌</label>
+                <select name="brandId">
+                    <option value="">请选择品牌</option>
+                    <option th:each="b : ${brands}" th:value="${b.id}"
+                            th:selected="${perfume.brandId != null and perfume.brandId == b.id}"
+                            th:text="${b.name}"></option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>分类</label>
+                <select name="categoryId">
+                    <option value="">请选择分类</option>
+                    <option th:each="c : ${categories}" th:value="${c.id}"
+                            th:selected="${perfume.categoryId != null and perfume.categoryId == c.id}"
+                            th:text="${c.name}"></option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>价格</label>
+                <input type="number" step="0.01" name="price" th:value="${perfume.price}" required/>
+            </div>
+            <div class="form-row">
+                <label>容量（ml）</label>
+                <input type="text" name="volume" th:value="${perfume.volume}"/>
+            </div>
+            <div class="form-row">
+                <label>前调</label>
+                <input type="text" name="mainNotes" th:value="${perfume.mainNotes}"/>
+            </div>
+            <div class="form-row">
+                <label>中调</label>
+                <input type="text" name="heartNotes" th:value="${perfume.heartNotes}"/>
+            </div>
+            <div class="form-row">
+                <label>后调</label>
+                <input type="text" name="baseNotes" th:value="${perfume.baseNotes}"/>
+            </div>
+            <div class="form-row">
+                <label>库存</label>
+                <input type="number" name="stock" th:value="${perfume.stock != null ? perfume.stock : 0}"/>
+            </div>
+            <div class="form-row">
+                <label>详情描述</label>
+                <textarea name="description" rows="4" th:text="${perfume.description}"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">保存</button>
+            <a th:href="@{/merchant/perfumes}" class="btn btn-outline">取消</a>
+        </form>
+    </div>
+</section>
+</div></body>
+</html>

@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>注册</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="auth-wrap">
+    <div class="auth-card">
+        <h2 th:text="${role == 'MERCHANT'} ? '商家注册' : '用户注册'">注册</h2>
+        <form th:action="@{/register}" method="post">
+            <input type="hidden" name="role" th:value="${role}" />
+            <div class="form-row">
+                <label>账号</label>
+                <input type="text" name="username" required />
+            </div>
+            <div class="form-row">
+                <label>昵称</label>
+                <input type="text" name="nickname" />
+            </div>
+            <div class="form-row">
+                <label>密码</label>
+                <input type="password" name="password" required />
+            </div>
+            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+            <button type="submit" class="btn btn-primary btn-block">注 册</button>
+            <p class="auth-switch">
+                <a th:href="@{/login(role=${role})}">已有账号？去登录</a>
+            </p>
+        </form>
+    </div>
+</section>
+</div></body>
+</html>

@@ -1,0 +1,18 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>公告列表</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">📢 公告</h2>
+    <ul class="notice-list">
+        <li th:each="n : ${notices}">
+            <a th:href="@{/notice/view(id=${n.id})}">
+                <strong th:text="${n.title}"></strong>
+                <span class="time" th:text="${#temporals.format(n.createTime, 'yyyy-MM-dd')}"></span>
+            </a>
+        </li>
+    </ul>
+</section>
+</div></body>
+</html>

@@ -1,0 +1,23 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>我的评价</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">✍️ 我的评价</h2>
+    <div th:if="${#lists.isEmpty(reviews)}" class="empty">还没有发表过评价</div>
+    <div class="review-item" th:each="r : ${reviews}">
+        <div class="review-head">
+            <strong th:text="${r.perfumeName}">香水</strong>
+            <span class="rating-stars" th:text="${r.rating}"></span>
+            <span class="time" th:text="${#temporals.format(r.createTime, 'yyyy-MM-dd HH:mm')}"></span>
+            <form th:action="@{/review/delete}" method="post" style="float:right">
+                <input type="hidden" name="id" th:value="${r.id}">
+                <button type="submit" class="btn btn-ghost btn-sm" onclick="return confirm('确认删除该评价？')">删除</button>
+            </form>
+        </div>
+        <div class="review-body" th:text="${r.content}"></div>
+    </div>
+</section>
+</div></body>
+</html>

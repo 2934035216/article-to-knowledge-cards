@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>香水详情</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <div class="detail-wrap">
+        <div class="detail-img">
+        <img th:if="${perfume.imageUrl != null and !perfume.imageUrl.isEmpty()}" th:src="${perfume.imageUrl}" th:alt="${perfume.name}">
+        <span th:if="${perfume.imageUrl == null or perfume.imageUrl.isEmpty()}" th:text="${perfume.name.substring(0,2)}"></span>
+    </div>
+        <div class="detail-info">
+            <h1 th:text="${perfume.name}">香水名</h1>
+            <p class="detail-meta">
+                <span th:text="${perfume.brandName}">品牌</span> ·
+                <span th:text="${perfume.categoryName}">分类</span> ·
+                <span th:text="${perfume.volume}">容量</span>
+            </p>
+            <p class="detail-price">¥ <span th:text="${perfume.price}">999</span></p>
+
+            <dl class="notes-list">
+                <div th:if="${perfume.mainNotes}"><dt>前调</dt><dd th:text="${perfume.mainNotes}"></dd></div>
+                <div th:if="${perfume.heartNotes}"><dt>中调</dt><dd th:text="${perfume.heartNotes}"></dd></div>
+                <div th:if="${perfume.baseNotes}"><dt>后调</dt><dd th:text="${perfume.baseNotes}"></dd></div>
+            </dl>
+
+            <div class="detail-stats">
+                <span th:text="'❤️ 收藏 ' + ${stats.favoriteCount}"></span>
+                <span th:text="${stats.avgRating != null ? ('⭐ ' + #numbers.formatDecimal(stats.avgRating, 1, 1)) : '⭐ 暂无评分'}"></span>
+                <span th:text="'✍️ 评价 ' + ${stats.reviewCount}"></span>
+                <span th:text="'📦 库存 ' + ${perfume.stock}"></span>
+            </div>
+
+            <div class="detail-actions" th:if="${loginUser != null}">
+                <form th:action="@{/favorite/toggle}" method="post" style="display:inline">
+                    <input type="hidden" name="perfumeId" th:value="${perfume.id}">
+                    <input type="hidden" name="backUrl" th:value="@{/perfume/detail(id=${perfume.id})}">
+                    <button class="btn" th:classappend="${isFavorite} ? 'btn-warning' : 'btn-outline'">
+                        <span th:text="${isFavorite} ? '❤️ 已收藏' : '🤍 收藏'"></span>
+                    </button>
+                </form>
+
+                <form th:action="@{/order/create}" method="post" style="display:inline">
+                    <input type="hidden" name="perfumeId" th:value="${perfume.id}">
+                    <label>数量</label>
+                    <input type="number" name="quantity" value="1" min="1" max="10">
+                    <input type="hidden" name="receiverName" th:value="${loginUser.nickname}">
+                    <button type="submit" class="btn btn-primary">立即购买</button>
+                </form>
+            </div>
+            <p class="login-hint" th:if="${loginUser == null}">请先 <a th:href="@{/login(role='USER')}">登录</a> 后收藏或购买</p>
+        </div>
+    </div>
+
+    <div class="detail-desc" th:if="${perfume.description}">
+        <h3>详情</h3>
+        <p th:utext="${perfume.description}"></p>
+    </div>
+
+    <div class="detail-reviews">
+        <h3>评价</h3>
+        <div th:if="${loginUser != null}" class="review-form">
+            <form th:action="@{/review/add}" method="post">
+                <input type="hidden" name="perfumeId" th:value="${perfume.id}">
+                <div class="rating-pick">
+                    <label>评分</label>
+                    <select name="rating">
+                        <option value="5">⭐⭐⭐⭐⭐ 5</option>
+                        <option value="4">⭐⭐⭐⭐ 4</option>
+                        <option value="3">⭐⭐⭐ 3</option>
+                        <option value="2">⭐⭐ 2</option>
+                        <option value="1">⭐ 1</option>
+                    </select>
+                </div>
+                <textarea name="content" rows="3" placeholder="分享你的使用感受..."></textarea>
+                <button type="submit" class="btn btn-primary">发表评价</button>
+            </form>
+        </div>
+
+        <div th:if="${#lists.isEmpty(reviews)}" class="empty">还没有评价，快来抢沙发！</div>
+        <div class="review-item" th:each="r : ${reviews}">
+            <div class="review-head">
+                <strong th:text="${r.nickname} ?: ${r.username}"></strong>
+                <span class="rating-stars" th:text="${r.rating}"></span>
+                <span class="time" th:text="${#temporals.format(r.createTime, 'yyyy-MM-dd HH:mm')}"></span>
+            </div>
+            <div class="review-body" th:text="${r.content}"></div>
+        </div>
+    </div>
+</section>
+</div></body>
+</html>

@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::page-main})}">
+<head><title>香水列表</title></head>
+<body>
+<div th:fragment="page-main">
+<section class="container page">
+    <h2 class="page-title">全部香水</h2>
+
+    <form th:action="@{/perfumes}" method="get" class="filter-bar">
+        <input type="text" name="keyword" th:value="${keyword}" placeholder="搜索香水...">
+        <select name="brandId">
+            <option value="">全部品牌</option>
+            <option th:each="b : ${brands}" th:value="${b.id}"
+                    th:selected="${brandId != null and brandId == b.id}"
+                    th:text="${b.name}"></option>
+        </select>
+        <select name="categoryId">
+            <option value="">全部分类</option>
+            <option th:each="c : ${categories}" th:value="${c.id}"
+                    th:selected="${categoryId != null and categoryId == c.id}"
+                    th:text="${c.name}"></option>
+        </select>
+        <button type="submit" class="btn btn-primary">筛选</button>
+    </form>
+
+    <div class="perfume-grid">
+        <div class="perfume-card" th:each="p : ${perfumes.content}">
+            <a th:href="@{/perfume/detail(id=${p.id})}" class="card-link">
+                <div class="perfume-img">
+                <img th:if="${p.imageUrl != null and !p.imageUrl.isEmpty()}" th:src="${p.imageUrl}" th:alt="${p.name}">
+                <span th:if="${p.imageUrl == null or p.imageUrl.isEmpty()}" th:text="${p.name.substring(0,1)}"></span>
+            </div>
+                <div class="perfume-info">
+                    <h3 th:text="${p.name}">香水名</h3>
+                    <p class="perfume-meta">
+                        <span th:text="${p.brandName}">品牌</span>
+                        <span class="price" th:text="'¥' + ${p.price}">价格</span>
+                    </p>
+                    <p class="sales" th:text="'已售 ' + ${p.sales} + ' 件'"></p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(perfumes.content)}" class="empty">暂无香水</div>
+
+    <div class="pagination">
+        <a th:if="${perfumes.hasPrevious()}"
+           th:href="@{/perfumes(brandId=${brandId}, categoryId=${categoryId}, keyword=${keyword}, page=${perfumes.number - 1})}"
+           class="btn btn-ghost">上一页</a>
+        <span th:text="'第 ' + ${perfumes.number + 1} + ' / ' + ${perfumes.totalPages} + ' 页'"></span>
+        <a th:if="${perfumes.hasNext()}"
+           th:href="@{/perfumes(brandId=${brandId}, categoryId=${categoryId}, keyword=${keyword}, page=${perfumes.number + 1})}"
+           class="btn btn-ghost">下一页</a>
+    </div>
+</section>
+</div></body>
+</html>
